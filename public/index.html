@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Tuff Proxy - Ultra Fast</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://duckduckgo.com">
+    <link rel="dns-prefetch" href="https://duckduckgo.com">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <h1>⚡ TUFF PROXY</h1>
+                <span class="badge">ULTRA FAST</span>
+            </div>
+            <div class="search-bar">
+                <input 
+                    type="text" 
+                    id="urlInput" 
+                    placeholder="Enter URL or search..."
+                    autocomplete="off"
+                    autofocus
+                >
+                <button id="goBtn" class="go-btn">GO</button>
+            </div>
+            <div class="controls">
+                <button id="devToolsBtn" class="dev-tools-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <polyline points="4 17 10 11 4 5"></polyline>
+                        <line x1="12" y1="19" x2="20" y2="19"></line>
+                    </svg>
+                    DevTools
+                </button>
+                <div class="ping-indicator">
+                    <div class="ping-dot"></div>
+                    <span id="pingValue">0ms</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="content">
+            <!-- Browser Frame -->
+            <div class="browser-frame" id="browserFrame">
+                <iframe id="proxyFrame" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-top-navigation allow-downloads"></iframe>
+            </div>
+
+            <!-- Console Panel -->
+            <div class="console-panel" id="consolePanel">
+                <div class="console-header">
+                    <h3>🔧 Developer Console</h3>
+                    <div class="console-controls">
+                        <button id="clearConsole" class="clear-btn">Clear</button>
+                        <button id="closeConsole" class="close-btn">✕</button>
+                    </div>
+                </div>
+                <div class="console-output" id="consoleOutput">
+                    <div class="console-message info">
+                        <span class="timestamp">[00:00:00]</span>
+                        <span class="message">⚡ Ultra Low Latency Mode Active</span>
+                    </div>
+                </div>
+                <div class="console-input-wrapper">
+                    <span class="prompt">&gt;</span>
+                    <input 
+                        type="text" 
+                        id="consoleInput" 
+                        class="console-input"
+                        placeholder="Execute JavaScript..."
+                        autocomplete="off"
+                    >
+                    <button id="executeBtn" class="execute-btn">▶</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
