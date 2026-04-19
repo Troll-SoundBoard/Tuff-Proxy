@@ -1,0 +1,421 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --neon-blue: #00d9ff;
+    --neon-purple: #b800ff;
+    --dark-bg: #0a0a0f;
+    --darker-bg: #050508;
+    --card-bg: #141420;
+    --text-primary: #e0e0ff;
+    --text-secondary: #9090b0;
+    --glow-blue: rgba(0, 217, 255, 0.5);
+    --glow-purple: rgba(184, 0, 255, 0.5);
+    --success-green: #00ff88;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background: var(--dark-bg);
+    color: var(--text-primary);
+    overflow: hidden;
+    height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* Header Styles */
+.header {
+    background: linear-gradient(135deg, var(--darker-bg) 0%, var(--card-bg) 100%);
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 2px solid var(--neon-blue);
+    box-shadow: 0 0 20px var(--glow-blue);
+    will-change: transform;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.logo h1 {
+    font-size: 1.3rem;
+    background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    white-space: nowrap;
+    font-weight: 800;
+}
+
+.badge {
+    font-size: 0.65rem;
+    background: var(--success-green);
+    color: var(--dark-bg);
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.search-bar {
+    flex: 1;
+    display: flex;
+    gap: 0.5rem;
+    max-width: 700px;
+}
+
+#urlInput {
+    flex: 1;
+    padding: 0.65rem 1rem;
+    background: var(--darker-bg);
+    border: 2px solid var(--neon-blue);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+#urlInput:focus {
+    border-color: var(--neon-purple);
+    box-shadow: 0 0 12px var(--glow-purple);
+}
+
+#urlInput::placeholder {
+    color: var(--text-secondary);
+}
+
+.go-btn {
+    padding: 0.65rem 1.5rem;
+    background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.go-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px var(--glow-purple);
+}
+
+.go-btn:active {
+    transform: translateY(0);
+}
+
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.dev-tools-btn {
+    padding: 0.65rem 1rem;
+    background: var(--card-bg);
+    border: 2px solid var(--neon-purple);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+}
+
+.dev-tools-btn:hover {
+    background: var(--neon-purple);
+    box-shadow: 0 0 15px var(--glow-purple);
+}
+
+.dev-tools-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Ping Indicator */
+.ping-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--darker-bg);
+    border: 1px solid var(--success-green);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--success-green);
+}
+
+.ping-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--success-green);
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+/* Content Area */
+.content {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+}
+
+.browser-frame {
+    flex: 1;
+    background: var(--darker-bg);
+    position: relative;
+    overflow: hidden;
+}
+
+#proxyFrame {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: white;
+}
+
+/* Console Panel */
+.console-panel {
+    width: 0;
+    background: var(--card-bg);
+    border-left: 2px solid var(--neon-purple);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: width 0.2s ease;
+    box-shadow: -5px 0 20px var(--glow-purple);
+}
+
+.console-panel.open {
+    width: 450px;
+}
+
+.console-header {
+    padding: 0.75rem 1rem;
+    background: var(--darker-bg);
+    border-bottom: 2px solid var(--neon-blue);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.console-header h3 {
+    font-size: 0.95rem;
+    color: var(--neon-blue);
+}
+
+.console-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.clear-btn, .close-btn {
+    background: none;
+    border: 1px solid var(--neon-blue);
+    color: var(--text-primary);
+    padding: 0.35rem 0.7rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.clear-btn:hover, .close-btn:hover {
+    background: var(--neon-blue);
+    color: var(--darker-bg);
+}
+
+.console-output {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.75rem;
+    font-family: 'Courier New', 'Consolas', monospace;
+    font-size: 0.85rem;
+}
+
+.console-message {
+    padding: 0.4rem 0.6rem;
+    margin-bottom: 0.4rem;
+    border-left: 3px solid var(--neon-blue);
+    background: rgba(0, 217, 255, 0.05);
+    border-radius: 0 3px 3px 0;
+    word-wrap: break-word;
+    line-height: 1.4;
+}
+
+.console-message.error {
+    border-left-color: #ff3366;
+    background: rgba(255, 51, 102, 0.05);
+    color: #ff6688;
+}
+
+.console-message.success {
+    border-left-color: var(--success-green);
+    background: rgba(0, 255, 136, 0.05);
+    color: #66ffaa;
+}
+
+.console-message.info {
+    border-left-color: var(--neon-purple);
+    background: rgba(184, 0, 255, 0.05);
+    color: var(--neon-purple);
+}
+
+.timestamp {
+    color: var(--text-secondary);
+    margin-right: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.message {
+    color: var(--text-primary);
+}
+
+.console-input-wrapper {
+    padding: 0.75rem;
+    background: var(--darker-bg);
+    border-top: 2px solid var(--neon-blue);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.prompt {
+    color: var(--neon-blue);
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+}
+
+.console-input {
+    flex: 1;
+    background: var(--card-bg);
+    border: 1px solid var(--neon-blue);
+    padding: 0.5rem 0.75rem;
+    color: var(--text-primary);
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.console-input:focus {
+    border-color: var(--neon-purple);
+    box-shadow: 0 0 8px var(--glow-purple);
+}
+
+.execute-btn {
+    padding: 0.5rem 0.85rem;
+    background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+    border: none;
+    border-radius: 4px;
+    color: white;
+    font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.execute-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 12px var(--glow-purple);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--darker-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--neon-purple);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header {
+        flex-wrap: wrap;
+        padding: 0.75rem;
+        gap: 0.75rem;
+    }
+    
+    .logo h1 {
+        font-size: 1.1rem;
+    }
+    
+    .badge {
+        font-size: 0.6rem;
+    }
+    
+    .search-bar {
+        order: 3;
+        width: 100%;
+        max-width: none;
+    }
+    
+    .controls {
+        gap: 0.5rem;
+    }
+    
+    .dev-tools-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+    
+    .ping-indicator {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.8rem;
+    }
+    
+    .console-panel.open {
+        width: 100%;
+        position: absolute;
+        height: 50%;
+        bottom: 0;
+        left: 0;
+        border-left: none;
+        border-top: 2px solid var(--neon-purple);
+    }
+}
