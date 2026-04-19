@@ -9,50 +9,37 @@ const http = require('http');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Initialize cache with 5 minute TTL
 const cache = new NodeCache({ stdTTL: 300, checkperiod: 60 });
 
-// Compression for faster responses
-app.use(compression({
-    level: 6,
-    threshold: 1024
-}));
-
-// Fast JSON parsing
+app.use(compression({ level: 6, threshold: 1024 }));
 app.use(express.json({ limit: '1mb' }));
+app.use(express.static('public', { maxAge: '1d', etag: true, lastModified: true }));
 
-// Serve static files with aggressive caching
-app.use(express.static('public', {
-    maxAge: '1d',
-    etag: true,
-    lastModified: true
-}));
-
-// Keep-alive agent for connection pooling (reduces latency)
 const httpAgent = new http.Agent({
-    keepAlive: true,
-    keepAliveMsecs: 30000,
-    maxSockets: 100,
-    maxFreeSockets: 10
+    keepAlive: true, keepAliveMsecs: 30000, maxSockets: 100, maxFreeSockets: 10
 });
 
 const httpsAgent = new https.Agent({
-    keepAlive: true,
-    keepAliveMsecs: 30000,
-    maxSockets: 100,
-    maxFreeSockets: 10,
+    keepAlive: true, keepAliveMsecs: 30000, maxSockets: 100, maxFreeSockets: 10,
     rejectUnauthorized: false
 });
 
-// Ultra-fast direct proxy with minimal processing
-app.use('/p/*', (req, res, next) => {
-    const targetUrl = req.path.substring(3); // Remove '/p/'
-    
-    if (!targetUrl) {
-        return res.status(400).send('Invalid URL');
-    }
+const BLOCKED_HEADERS = [
+    'x-frame-options',
+    'content-security-policy',
+    'content-security-policy-report-only',
+    'x-content-type-options',
+    'cross-origin-opener-policy',
+    'cross-origin-embedder-policy',
+    'cross-origin-resource-policy'
+];
 
-    // Check cache first
+// Ultra-fast direct proxy
+app.use('/p/*', (req, res, next) => {
+    const targetUrl = req.path.substring(3);
+
+    if (!targetUrl) return res.status(400).send('Invalid URL');
+
     const cached = cache.get(targetUrl);
     if (cached) {
         res.set(cached.headers);
@@ -64,7 +51,7 @@ app.use('/p/*', (req, res, next) => {
     const protocol = isHttps ? https : http;
 
     const options = {
-        agent: agent,
+        agent,
         headers: {
             'User-Agent': req.headers['user-agent'] || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             'Accept': req.headers['accept'] || '*/*',
@@ -76,17 +63,15 @@ app.use('/p/*', (req, res, next) => {
 
     const proxyReq = protocol.get(targetUrl, options, (proxyRes) => {
         const chunks = [];
-        
-        // Set headers immediately
+
         Object.keys(proxyRes.headers).forEach(key => {
-            if (!['content-encoding', 'transfer-encoding'].includes(key.toLowerCase())) {
+            if (!['content-encoding', 'transfer-encoding', ...BLOCKED_HEADERS].includes(key.toLowerCase())) {
                 res.set(key, proxyRes.headers[key]);
             }
         });
 
         res.status(proxyRes.statusCode);
 
-        // Stream response for minimum latency
         proxyRes.on('data', (chunk) => {
             chunks.push(chunk);
             res.write(chunk);
@@ -94,15 +79,9 @@ app.use('/p/*', (req, res, next) => {
 
         proxyRes.on('end', () => {
             const body = Buffer.concat(chunks);
-            
-            // Cache successful responses
             if (proxyRes.statusCode === 200) {
-                cache.set(targetUrl, {
-                    headers: proxyRes.headers,
-                    body: body
-                });
+                cache.set(targetUrl, { headers: proxyRes.headers, body });
             }
-            
             res.end();
         });
     });
@@ -118,22 +97,17 @@ app.use('/p/*', (req, res, next) => {
     });
 });
 
-// Minimal HTML rewriting proxy
+// HTML rewriting proxy
 app.get('/proxy', async (req, res) => {
     const targetUrl = req.query.url;
-    
-    if (!targetUrl) {
-        return res.status(400).send('URL required');
-    }
+
+    if (!targetUrl) return res.status(400).send('URL required');
 
     try {
         const url = new URL(targetUrl.startsWith('http') ? targetUrl : 'https://' + targetUrl);
-        
-        // Check cache
+
         const cached = cache.get(targetUrl);
-        if (cached) {
-            return res.send(cached);
-        }
+        if (cached) return res.send(cached);
 
         const isHttps = url.protocol === 'https:';
         const agent = isHttps ? httpsAgent : httpAgent;
@@ -144,7 +118,7 @@ app.get('/proxy', async (req, res) => {
             port: url.port || (isHttps ? 443 : 80),
             path: url.pathname + url.search,
             method: 'GET',
-            agent: agent,
+            agent,
             headers: {
                 'Host': url.hostname,
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -158,24 +132,25 @@ app.get('/proxy', async (req, res) => {
         };
 
         const proxyReq = protocol.request(options, (proxyRes) => {
-            let body = '';
-
-            proxyRes.setEncoding('utf8');
-            proxyRes.on('data', (chunk) => {
-                body += chunk;
+            // Strip frame-blocking headers
+            Object.keys(proxyRes.headers).forEach(key => {
+                if (!BLOCKED_HEADERS.includes(key.toLowerCase())) {
+                    res.set(key, proxyRes.headers[key]);
+                }
             });
+
+            let body = '';
+            proxyRes.setEncoding('utf8');
+            proxyRes.on('data', (chunk) => { body += chunk; });
 
             proxyRes.on('end', () => {
                 const contentType = proxyRes.headers['content-type'] || '';
 
                 if (contentType.includes('text/html')) {
-                    // Minimal URL rewriting for speed
                     const baseUrl = url.origin;
-                    
-                    // Fast regex replacements (minimal processing)
+
                     body = body.replace(/<head>/i, `<head><base href="${baseUrl}/">`);
-                    
-                    // Rewrite absolute URLs only
+
                     body = body.replace(/href=["']https?:\/\/[^"']+["']/gi, (match) => {
                         const hrefUrl = match.match(/href=["']([^"']+)["']/)[1];
                         return `href="/proxy?url=${encodeURIComponent(hrefUrl)}"`;
@@ -186,7 +161,6 @@ app.get('/proxy', async (req, res) => {
                         return `src="/p/${srcUrl}"`;
                     });
 
-                    // Cache result
                     cache.set(targetUrl, body);
                 }
 
@@ -216,15 +190,11 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Optimize server settings
 const server = app.listen(PORT, () => {
-    console.log(`🚀 Tuff Proxy (Ultra Low Latency) running on port ${PORT}`);
+    console.log(`🚀 Tuff Proxy running on port ${PORT}`);
     console.log(`📍 Local: http://localhost:${PORT}`);
 });
 
-// Increase max listeners for performance
 server.setMaxListeners(0);
-
-// Set keep-alive timeout
 server.keepAliveTimeout = 65000;
 server.headersTimeout = 66000;
